@@ -12,22 +12,22 @@
           "informationUri": "https://www.glog.ai",
           "rules": [
             {
-              "id": "glog-2d95250e-eb95-4a7d-ae1c-367b5f8bd6bd",
+              "id": "glog-9b54d136-e6f4-4a1e-81b1-c15a13de4b47",
               "help": {
                 "text": "",
-                "markdown": "## Description\n\nThe `strcpy` function in C++ is a standard library function that copies a string from source to destination. It is considered unsafe because it does not check the array bounds of the destination buffer, which can lead to buffer overflow if the source string is larger than the destination buffer. This can potentially allow an attacker to execute arbitrary code or cause a system crash.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use safer string copy functions that check the size of the destination buffer such as `strncpy`, `strlcpy`, or `memcpy`. These functions require you to specify the maximum number of characters to be copied, thus preventing buffer overflow.\n\n## Source Code Fix Recommendation\n\nReplace the `strcpy` function with `strncpy` function:\n\n```cpp\nchar opencl_kernel_function_name[30];\nstrncpy(opencl_kernel_function_name, \"exposure_comp_apply_gains\", sizeof(opencl_kernel_function_name));\nopencl_kernel_function_name[sizeof(opencl_kernel_function_name) - 1] = '\\0';\n```\n\nIn this code, `strncpy` will copy at most `sizeof(opencl_kernel_function_name)` characters from the source string to the destination buffer. The last line ensures that the string is null-terminated.\n\n## Library Dependencies\n\nThe code example requires the following library to execute properly:\n\n- `<cstring>`\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)"
+                "markdown": "## Description\n\nThe `strncpy` function in C++ is considered unsafe because it does not guarantee null-termination of the destination string when the source string length is greater than or equal to the destination buffer size. This can lead to buffer overflows, which can be exploited to execute arbitrary code, overwrite data, or cause a system crash.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use safer string handling functions that ensure null-termination of the destination string. In C++, the `std::string` class provides safe string operations. Avoid using C-style string functions like `strncpy`.\n\n## Source Code Fix Recommendation\n\nReplace the `strncpy` function with a safer alternative. Here's a possible fix using `std::string`:\n\n```cpp\nstd::string str = compilerOptions.toStdString();\nif (str.size() >= sizeof(reply.message)) {\n    str.resize(sizeof(reply.message) - 1);\n}\nstd::copy(str.begin(), str.end(), reply.message);\nreply.message[str.size()] = '\\0';\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<string>` for `std::string`\n- `<algorithm>` for `std::copy`\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
               },
               "properties": {
                 "tags": [
-                  "DS185832"
+                  "DS111237"
                 ]
               }
             },
             {
-              "id": "glog-dd54d795-3094-483f-b43e-33968ec2b000",
+              "id": "glog-35a83e44-11b5-4750-b3a7-62559eec5123",
               "help": {
                 "text": "",
-                "markdown": "## Description\n\nThe `memcpy` function in C++ is used to copy a block of memory from one location to another. This function is vulnerable to buffer overflow attacks if the size of the data being copied is larger than the size of the destination buffer. In the provided code snippet, `memcpy(mAlpha, other.mAlpha, sizeof(mAlpha[0])`, the size of the data being copied is not checked against the size of the destination buffer `mAlpha`, which could lead to a buffer overflow vulnerability.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the size of the data being copied does not exceed the size of the destination buffer. This can be done by checking the size of the data and the size of the buffer before the `memcpy` operation.\n\n## Source Code Fix Recommendation\n\nHere is a recommended fix for the provided code snippet:\n\n```cpp\nsize_t size = sizeof(mAlpha[0]);\nif (size <= sizeof(other.mAlpha)) {\n    memcpy(mAlpha, other.mAlpha, size);\n} else {\n    // Handle error\n}\n```\n\nIn this fixed code, we first calculate the size of the data to be copied. Then, we check if this size is less than or equal to the size of the destination buffer. If it is, we proceed with the `memcpy` operation. If it is not, we handle the error appropriately.\n\n## Library Dependencies\n\nThe `memcpy` function is part of the C Standard Library, so the only library dependency required by the code example is:\n\n```cpp\n#include <cstring>\n```\n\n## OWASP Resources\n\n- [Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n\nPlease note that these links are subject to change and may not be accessible at all times."
+                "markdown": "## Description\n\nThe vulnerability in question is a buffer overflow vulnerability that can occur when using the `memcpy` function in C++. This function is used to copy a block of memory from one location to another. If the size of the destination buffer is less than the size of the source buffer, it can lead to a buffer overflow. This can cause the program to crash or, in some cases, allow an attacker to execute arbitrary code.\n\nIn the provided code snippet, the `memcpy` function is used to copy data from `ptr` to `outputBuffer[6]`. The size of the data to be copied is calculated as `count*sizeof(float)`. If `count` is a large number, it can lead to a buffer overflow.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the data being copied. This can be done by checking the size of the destination buffer before calling `memcpy`.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code snippet:\n\n```cpp\nif (count <= (sizeof(outputBuffer) / sizeof(outputBuffer[0])) - 6) {\n    memcpy(outputBuffer[6], ptr, count*sizeof(float));\n} else {\n    // Handle error\n}\n```\n\nIn this version, we first check if `count` is less than or equal to the size of `outputBuffer` minus 6 (the index we are copying to). If it is, we proceed with the `memcpy`. If not, we handle the error in some way.\n\n## Library Dependencies\n\nThe code snippet requires the following library to execute properly:\n\n```cpp\n#include <cstring>\n```\n\n## OWASP and CWE Links\n\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
               },
               "properties": {
                 "tags": [
@@ -36,34 +36,10 @@
               }
             },
             {
-              "id": "glog-b618a5ef-e0ec-4b0a-86c4-2f277809dfe8",
+              "id": "glog-812526a2-60f9-4944-872d-434b0b3da0e5",
               "help": {
                 "text": "",
-                "markdown": "## Description\n\nThe `strcpy` function in C++ is a standard library function that copies a string. However, it is considered unsafe because it does not check the size of the destination buffer, which can lead to buffer overflow vulnerabilities if the source string is larger than the destination buffer. This can lead to arbitrary code execution, denial of service, or information disclosure vulnerabilities.\n\nIn the provided code snippet:\n\n```cpp\nstrcpy(opencl_kernel_function_name, \"exposure_comp_calc_errorfn_mask\");\n```\n\nThe `strcpy` function is used to copy the string \"exposure_comp_calc_errorfn_mask\" into the `opencl_kernel_function_name` buffer. If the size of `opencl_kernel_function_name` is less than the length of the source string, a buffer overflow will occur.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use safer string copy functions that check the size of the destination buffer. In C++, this can be done using the `strncpy` function, which takes an additional parameter specifying the maximum number of characters to be copied.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code snippet using `strncpy`:\n\n```cpp\nstrncpy(opencl_kernel_function_name, \"exposure_comp_calc_errorfn_mask\", sizeof(opencl_kernel_function_name) - 1);\n```\n\nThis code will copy at most `sizeof(opencl_kernel_function_name) - 1` characters from the source string to the destination buffer, preventing a buffer overflow. The `- 1` is to leave space for the null terminator.\n\n## Library Dependencies\n\nThe code snippet requires the following library to execute properly:\n\n```cpp\n#include <cstring>\n```\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
-              },
-              "properties": {
-                "tags": [
-                  "DS185832"
-                ]
-              }
-            },
-            {
-              "id": "glog-cef51256-767a-4c50-88de-9f99f18b1453",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\nThe `strcpy` function in C++ is a standard library function that copies a string. However, it is considered unsafe because it does not check the size of the destination buffer, which can lead to buffer overflow vulnerabilities if the source string is larger than the destination buffer. This can lead to arbitrary code execution, denial of service, or information disclosure vulnerabilities.\n\nIn the provided code snippet:\n\n```cpp\nstrcpy(opencl_kernel_function_name, \"exposure_comp_calc_errorRGBfn_mask\");\n```\n\nThe `strcpy` function is used to copy the string \"exposure_comp_calc_errorRGBfn_mask\" into the `opencl_kernel_function_name` buffer. If the size of `opencl_kernel_function_name` is less than the size of the source string, a buffer overflow will occur.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use safer string copy functions that check the size of the destination buffer, such as `strncpy`, `strlcpy`, or `memcpy`. These functions require you to specify the maximum number of characters to copy, preventing buffer overflows.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code using `strncpy`:\n\n```cpp\nstrncpy(opencl_kernel_function_name, \"exposure_comp_calc_errorRGBfn_mask\", sizeof(opencl_kernel_function_name) - 1);\n```\n\nThis code will copy at most `sizeof(opencl_kernel_function_name) - 1` characters, leaving room for the null terminator. If the source string is larger, it will be truncated.\n\n## Library Dependencies\n\nThe code example requires the following library to execute properly:\n\n- `cstring` (for `strcpy` and `strncpy`)\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
-              },
-              "properties": {
-                "tags": [
-                  "DS185832"
-                ]
-              }
-            },
-            {
-              "id": "glog-135dddd8-3586-4bbe-98a4-7a3a7eab9d18",
-              "help": {
-                "text": "",
-                "markdown": "## Description\n\nThe `memcpy` function in C++ is used to copy a block of memory from one location to another. This function is vulnerable to buffer overflow attacks if the size of the data being copied is larger than the size of the destination buffer. In the provided code snippet, `memcpy(mData, other.mData, sizeof(mData[0])`, the size of the data being copied is not checked against the size of the destination buffer `mData`, which can lead to a buffer overflow if `other.mData` is larger than `mData`.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the size of the data being copied does not exceed the size of the destination buffer. This can be done by checking the size of the source data against the size of the destination buffer before performing the `memcpy` operation.\n\n## Source Code Fix Recommendation\n\nHere is a recommended fix for the provided code snippet:\n\n```cpp\nsize_t size = sizeof(mData[0]);\nif (size <= sizeof(other.mData)) {\n    memcpy(mData, other.mData, size);\n} else {\n    // Handle error\n}\n```\n\nIn this fixed code, we first check if the size of `mData` is less than or equal to the size of `other.mData` before performing the `memcpy` operation. If `mData` is larger, we handle the error appropriately.\n\n## Library Dependencies\n\nThe `memcpy` function is part of the C Standard Library, so you need to include the `<cstring>` header file in your C++ code.\n\n```cpp\n#include <cstring>\n```\n\n## OWASP and CWE Links\n\n- [OWASP Buffer Overflow Attack](https://owasp.org/www-community/attacks/Buffer_overflow_attack)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
+                "markdown": "## Description\n\nThe vulnerability in question is a buffer overflow vulnerability that can occur when using the `memcpy` function in C++. This function is used to copy a block of memory from one location to another. The vulnerability arises when the size of the destination buffer is smaller than the size of the source buffer. This can lead to overwriting of adjacent memory and can cause unexpected behavior, including program crashes, data corruption, and execution of malicious code.\n\nIn the provided code snippet, `memcpy(outputBuffer[5], ptr, (count*sizeof(float))`, the vulnerability arises from the fact that the size of the destination buffer (`outputBuffer[5]`) is not checked before the `memcpy` operation. If `count*sizeof(float)` is greater than the size of `outputBuffer[5]`, a buffer overflow will occur.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the data being copied. This can be done by checking the size of the destination buffer before performing the `memcpy` operation. Additionally, consider using safer alternatives to `memcpy`, such as `strncpy` or `memcpy_s`, which include built-in bounds checking.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code snippet:\n\n```cpp\nif (count*sizeof(float) <= sizeof(outputBuffer[5])) {\n    memcpy(outputBuffer[5], ptr, count*sizeof(float));\n} else {\n    // Handle the error, e.g., by logging it and/or terminating the program.\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library to execute properly:\n\n- `cstring` (for `memcpy`)\n\n## OWASP Resources\n\n- [Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n\n## Common Weakness Enumeration (CWE)\n\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
               },
               "properties": {
                 "tags": [
@@ -72,14 +48,146 @@
               }
             },
             {
-              "id": "glog-a65ddabe-8f00-49bd-a1b0-412f733ac57b",
+              "id": "glog-943353eb-c548-46ff-b0d7-f9854362cd87",
               "help": {
                 "text": "",
-                "markdown": "## Description\n\nThe `memcpy` function in C++ is used to copy a block of memory from one location to another. This function does not check for any buffer overflow condition, which can lead to a vulnerability if the destination buffer is smaller than the source buffer. This can lead to overwriting of adjacent memory and can cause unpredictable behavior of the program, including crashes, data corruption, and code execution.\n\nIn the provided code snippet:\n\n```cpp\nmemcpy(&meta->data.u, &node->paramList[0]->u, sizeof(meta->data.u));\n```\n\nThe vulnerability could occur if the size of `node->paramList[0]->u` is larger than `meta->data.u`. This would result in a buffer overflow.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the data being copied from the source buffer. This can be done by checking the size of the source and destination buffers before calling `memcpy`.\n\n## Source Code Fix Recommendation\n\nA safer alternative to `memcpy` is `memmove`, which also handles overlapping memory regions. However, it does not solve the buffer overflow problem. The best solution is to always check the size of the buffers.\n\nHere is a fixed version of the code:\n\n```cpp\nif (sizeof(meta->data.u) >= sizeof(node->paramList[0]->u)) {\n    memcpy(&meta->data.u, &node->paramList[0]->u, sizeof(node->paramList[0]->u));\n} else {\n    // Handle error\n}\n```\n\n## Library Dependencies\n\nThe `memcpy` function is part of the C Standard Library, so no additional libraries are needed for this code to execute.\n\n## References\n\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
+                "markdown": "## Description\n\nThe vulnerability in question is a buffer overflow vulnerability that can occur when using the `memcpy` function in C++. This function is used to copy a block of memory from one location to another. If the destination buffer is smaller than the source buffer, it can lead to a buffer overflow, which can cause the program to crash or, in some cases, allow an attacker to execute arbitrary code.\n\nIn the provided code snippet, `memcpy(outputBuffer[4], ptr, (count*sizeof(float))`, the size of the destination buffer (`outputBuffer[4]`) is not checked against the size of the source buffer (`ptr`). If `count*sizeof(float)` is greater than the size of `outputBuffer[4]`, it will result in a buffer overflow.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the data being copied from the source buffer. This can be done by checking the size of the destination buffer against the size of the source buffer before calling `memcpy`.\n\n## Source Code Fix Recommendation\n\nHere is a recommended fix for the provided code snippet:\n\n```cpp\nif (count*sizeof(float) <= sizeof(outputBuffer[4])) {\n    memcpy(outputBuffer[4], ptr, count*sizeof(float));\n} else {\n    // Handle error\n}\n```\n\nIn this fixed code, we first check if the size of the destination buffer is large enough to hold the data from the source buffer. If it is, we proceed with the `memcpy`. If it isn't, we handle the error in some way (this will depend on the specifics of your program).\n\n## Library Dependencies\n\nThe `memcpy` function is part of the C Standard Library, so you will need to include the `cstring` header:\n\n```cpp\n#include <cstring>\n```\n\n## OWASP and CWE Links\n\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
               },
               "properties": {
                 "tags": [
                   "DS121708"
+                ]
+              }
+            },
+            {
+              "id": "glog-eccae1e7-4302-4d8d-81f8-8cf31c9c5291",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe vulnerability in question is a buffer overflow vulnerability that can occur when using the `memcpy` function in C++. This function is used to copy a block of memory from one location to another. If the size of the destination buffer is less than the size of the source buffer, a buffer overflow can occur. This can lead to unexpected behavior, including crashes, data corruption, and potentially the execution of malicious code.\n\nIn the provided code snippet, the vulnerability arises from the use of `memcpy` to copy data from `ptr` to `outputBuffer[2]` without ensuring that `outputBuffer[2]` has enough space to hold the copied data.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the copied data. This can be done by checking the size of the destination buffer before calling `memcpy`.\n\nAdditionally, consider using safer alternatives to `memcpy`, such as `strncpy` or `memcpy_s`, which include a length parameter to prevent buffer overflows.\n\n## Source Code Fix Recommendation\n\nHere is a possible fix for the provided code snippet:\n\n```cpp\nif (count*sizeof(float) <= sizeof(outputBuffer[2])) {\n    memcpy(outputBuffer[2], ptr, (count*sizeof(float));\n} else {\n    // Handle error\n}\n```\n\nIn this fixed code, we first check if `outputBuffer[2]` has enough space to hold the copied data. If it does, we proceed with the `memcpy`. If it does not, we handle the error in a way that is appropriate for the specific program.\n\n## Library Dependencies\n\nThe provided code snippet requires the following library to execute properly:\n\n- `cstring`\n\n## OWASP and CWE Links\n\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS121708"
+                ]
+              }
+            },
+            {
+              "id": "glog-c1b01c7f-958f-437a-a947-8a0ceff014c6",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe vulnerability in question is a buffer overflow vulnerability that can occur when using the `memcpy` function in C++. This function is used to copy a block of memory from one location to another. If the destination buffer is smaller than the source buffer, `memcpy` will overwrite adjacent memory, leading to undefined behavior, crashes, or potential code execution.\n\nIn the provided code snippet, the size of the memory to be copied is calculated as `count * sizeof(float)`. If `count` is not properly validated, it can lead to a buffer overflow.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the data being copied. This can be done by checking the size of the destination buffer before calling `memcpy`.\n\nAdditionally, consider using safer alternatives to `memcpy` such as `memcpy_s` or `strncpy` which include the size of the destination buffer as a parameter. These functions will not overwrite the destination buffer if the source is larger.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code snippet:\n\n```cpp\n#include <cstring> // for memcpy\n#include <algorithm> // for min\n\n// Ensure outputBuffer[3] is large enough\nif (sizeof(outputBuffer[3]) >= count * sizeof(float)) {\n    memcpy(outputBuffer[3], ptr, count * sizeof(float));\n} else {\n    // Handle error\n}\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstring>`: This library provides the `memcpy` function.\n- `<algorithm>`: This library provides the `min` function.\n\n## OWASP and CWE Links\n\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS121708"
+                ]
+              }
+            },
+            {
+              "id": "glog-761cac78-f141-4a28-8dd8-6dd28a177470",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe vulnerability in question is a buffer overflow vulnerability that can occur when using the `memcpy` function in C++. This function is used to copy a block of memory from one location to another. If the size of the destination buffer is less than the size of the source buffer, a buffer overflow can occur. This can lead to unexpected behavior, including crashes, data corruption, and potential execution of malicious code.\n\nIn the provided code snippet, the vulnerability arises from the fact that the size of the `outputBuffer[1]` is not checked before the `memcpy` operation. If `count*sizeof(float)` is greater than the size of `outputBuffer[1]`, a buffer overflow will occur.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the data being copied. This can be done by checking the size of the destination buffer before performing the `memcpy` operation.\n\n## Source Code Fix Recommendation\n\nHere is a recommended fix for the provided code snippet:\n\n```cpp\nif (count*sizeof(float) <= sizeof(outputBuffer[1])) {\n    memcpy(outputBuffer[1], ptr, (count*sizeof(float));\n} else {\n    // Handle error condition\n}\n```\n\nIn this fixed code, we first check if `count*sizeof(float)` is less than or equal to the size of `outputBuffer[1]`. If it is, we proceed with the `memcpy` operation. If it is not, we handle the error condition appropriately.\n\n## Library Dependencies\n\nThe code example requires the following library to execute properly:\n\n- `cstring` (for `memcpy` function)\n\n## OWASP and CWE Links\n\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS121708"
+                ]
+              }
+            },
+            {
+              "id": "glog-d0931c9b-5b1e-4521-a739-c7aabddfcef4",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe vulnerability in question is a buffer overflow vulnerability that can occur when using the `memcpy` function in C++. This function is used to copy a block of memory from one location to another. If the size of the destination buffer is less than the size of the source buffer, a buffer overflow can occur. This can lead to unexpected behavior, including crashes, data corruption, and potential security vulnerabilities.\n\nIn the provided code snippet, the vulnerability arises from the fact that the size of the `outputBuffer[0]` is not checked before the `memcpy` operation. If `count*sizeof(float)` is larger than the size of `outputBuffer[0]`, a buffer overflow will occur.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, you should always ensure that the destination buffer is large enough to hold the data being copied. This can be done by checking the size of the destination buffer before performing the `memcpy` operation.\n\n## Source Code Fix Recommendation\n\nHere is a fixed version of the code snippet:\n\n```cpp\nif (count*sizeof(float) <= sizeof(outputBuffer[0])) {\n    memcpy(outputBuffer[0], ptr, (count*sizeof(float));\n} else {\n    // Handle error condition\n}\n```\n\nIn this version of the code, the size of the `outputBuffer[0]` is checked before the `memcpy` operation. If `count*sizeof(float)` is larger than the size of `outputBuffer[0]`, the `memcpy` operation is not performed, preventing a buffer overflow.\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstring>`: This library provides the `memcpy` function.\n\n## OWASP Resources\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n\n## Common Weakness Enumeration (CWE)\n\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS121708"
+                ]
+              }
+            },
+            {
+              "id": "glog-d5a4e576-79ac-4208-8914-47e09090e21f",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe `strcpy` function in C++ is a standard library function that copies a string. However, it is considered unsafe because it does not check the size of the destination buffer, which can lead to buffer overflow vulnerabilities if the source string is larger than the destination buffer. This can lead to arbitrary code execution, denial of service, or information disclosure vulnerabilities.\n\nIn the provided code snippet:\n\n```cpp\nstrcpy(binaryFilename_resnet152, binaryFilename_resnet152_str.c_str());\n```\n\nThe `strcpy` function is used to copy the string from `binaryFilename_resnet152_str.c_str()` to `binaryFilename_resnet152`. If the size of `binaryFilename_resnet152` is less than the size of `binaryFilename_resnet152_str.c_str()`, it can lead to a buffer overflow.\n\n## Mitigation\n\nTo mitigate this vulnerability, use safer string copy functions that check the size of the destination buffer, such as `strncpy`, `strlcpy`, or `memcpy`. These functions require you to specify the maximum number of characters to be copied, preventing buffer overflow.\n\n## Code Fix\n\nHere is a safer version of the code using `strncpy`:\n\n```cpp\nstrncpy(binaryFilename_resnet152, binaryFilename_resnet152_str.c_str(), sizeof(binaryFilename_resnet152) - 1);\nbinaryFilename_resnet152[sizeof(binaryFilename_resnet152) - 1] = '\\0'; // Ensure null termination\n```\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n```cpp\n#include <cstring>\n```\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n\nPlease note that the links provided are accessible to anonymous users at the time of writing this report."
+              },
+              "properties": {
+                "tags": [
+                  "DS185832"
+                ]
+              }
+            },
+            {
+              "id": "glog-fb5c152e-afe3-4249-a091-78cb31224f37",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe `strcpy` function in C++ is a standard library function that copies a string. However, it is considered unsafe because it does not check the size of the destination buffer, which can lead to buffer overflow vulnerabilities if the source string is larger than the destination buffer. This can lead to arbitrary code execution, denial of service, or information disclosure vulnerabilities.\n\nIn the provided code snippet, `strcpy` is used to copy the string from `binaryFilename_vgg_str.c_str()` to `binaryFilename_vgg`. If the size of the string returned by `binaryFilename_vgg_str.c_str()` is larger than the buffer `binaryFilename_vgg`, it can lead to a buffer overflow.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use safer string copy functions that check the size of the destination buffer. In C++, this can be achieved by using the `strncpy` function, which takes an additional parameter specifying the maximum number of characters to be copied from the source string.\n\n## Source Code Fix Recommendation\n\nReplace the `strcpy` function with `strncpy` as follows:\n\n```cpp\nstrncpy(binaryFilename_vgg, binaryFilename_vgg_str.c_str(), sizeof(binaryFilename_vgg) - 1);\nbinaryFilename_vgg[sizeof(binaryFilename_vgg) - 1] = '\\0'; // Ensure null termination\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstring>`: This library is required for the `strcpy` and `strncpy` functions.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS185832"
+                ]
+              }
+            },
+            {
+              "id": "glog-362d0131-2fc8-4aa8-8e71-2119826a499b",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe `strcpy` function in C++ is a standard library function that copies a string. However, it is considered unsafe because it does not check the size of the destination buffer, which can lead to buffer overflow if the source string is larger than the destination buffer. This can cause memory corruption, leading to unpredictable program behavior, crashes, or even code execution. This vulnerability is known as \"Detected Use of Prohibited C Function (strcpy)\".\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use safer string copy functions that include a length parameter. This allows the function to ensure that it does not write past the end of the buffer. Functions like `strncpy`, `strlcpy` or `memcpy` can be used instead. However, these functions have their own caveats and must be used correctly to avoid other vulnerabilities.\n\n## Source Code Fix Recommendation\n\nReplace the `strcpy` function with `strncpy` function:\n\n```cpp\nstrncpy(binaryFilename_vgg19, binaryFilename_vgg19_str.c_str(), sizeof(binaryFilename_vgg19) - 1);\nbinaryFilename_vgg19[sizeof(binaryFilename_vgg19) - 1] = '\\0';\n```\n\nIn this code, `sizeof(binaryFilename_vgg19) - 1` ensures that the copied string will not exceed the size of the destination buffer. The last line ensures that the string is null-terminated, which `strncpy` does not do if the source string is larger than the size parameter.\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstring>`: This library is required for the `strncpy` function.\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)\n\nPlease note that the links provided are active and accessible to anonymous users at the time of writing."
+              },
+              "properties": {
+                "tags": [
+                  "DS185832"
+                ]
+              }
+            },
+            {
+              "id": "glog-880ca9fb-401b-4ff0-9705-cb4bf3e3dc0f",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe `strcpy` function in C++ is a standard library function that copies a string from source to destination. It is considered unsafe because it does not check the array bounds of the two strings, which can lead to buffer overflow vulnerabilities if the source string is longer than the destination string. This can potentially allow an attacker to execute arbitrary code or cause a system crash.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use safer string copy functions that check the array bounds such as `strncpy`, `strlcpy` or `memcpy`. These functions require the size of the destination buffer as an argument, which can prevent buffer overflow vulnerabilities.\n\n## Source Code Fix Recommendation\n\nReplace the `strcpy` function with `strncpy` function:\n\n```cpp\nstrncpy(binaryFilename_resnet101, binaryFilename_resnet101_str.c_str(), sizeof(binaryFilename_resnet101) - 1);\n```\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstring>`: This library is required for the `strcpy` and `strncpy` functions.\n\n## References\n\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n\nPlease note that the links provided are valid and active for anonymous users at the time of writing this report."
+              },
+              "properties": {
+                "tags": [
+                  "DS185832"
+                ]
+              }
+            },
+            {
+              "id": "glog-d700b798-ef0a-4d70-9809-5fb52bcadf2c",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe `strcpy` function in C++ is a standard library function that copies a string from source to destination. It is considered unsafe because it does not check the array bounds of the destination buffer, which can lead to buffer overflow vulnerabilities if the source string is longer than the destination buffer.\n\nBuffer overflow vulnerabilities can lead to various security issues, including arbitrary code execution, denial-of-service attacks, and information disclosure.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, it is recommended to use safer string copy functions that include array bounds checking, such as `strncpy`, `strlcpy`, or `snprintf`. These functions prevent buffer overflow by ensuring that no more than the specified number of characters are copied to the destination buffer.\n\n## Source Code Fix Recommendation\n\nReplace the `strcpy` function with a safer alternative. For example, you can use `strncpy` as follows:\n\n```cpp\nstrncpy(binaryFilename_googlenet, binaryFilename_googlenet_str.c_str(), sizeof(binaryFilename_googlenet) - 1);\n```\n\nThis will copy at most `sizeof(binaryFilename_googlenet) - 1` characters from `binaryFilename_googlenet_str.c_str()` to `binaryFilename_googlenet`, ensuring that the destination buffer is not overflowed.\n\n## Library Dependencies\n\nThe code example requires the following library dependencies:\n\n- `<cstring>`: This library provides the `strcpy` and `strncpy` functions.\n\n## References\n\n- [OWASP Buffer Overflow](https://owasp.org/www-community/vulnerabilities/Buffer_Overflow)\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS185832"
+                ]
+              }
+            },
+            {
+              "id": "glog-495785a4-dda3-4464-9619-44de60715514",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe `strcpy` function in C++ is a standard library function that copies a string. However, it is considered unsafe because it does not check the size of the destination buffer, which can lead to buffer overflow vulnerabilities if the source string is larger than the destination buffer. This can lead to arbitrary code execution, denial of service, or information disclosure vulnerabilities.\n\nIn the provided code snippet, `strcpy` is used to copy the string from `binaryFilename_resnet_str.c_str()` to `binaryFilename_resnet`. If the size of `binaryFilename_resnet` is less than the size of `binaryFilename_resnet_str.c_str()`, it can lead to a buffer overflow.\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use safer string copy functions that check the size of the destination buffer. In C++, this can be achieved by using the `strncpy` function, which takes an additional parameter to specify the maximum number of characters to be copied from the source string.\n\n## Source Code Fix Recommendation\n\nHere is a recommended fix for the provided code snippet:\n\n```cpp\nstrncpy(binaryFilename_resnet, binaryFilename_resnet_str.c_str(), sizeof(binaryFilename_resnet) - 1);\nbinaryFilename_resnet[sizeof(binaryFilename_resnet) - 1] = '\\0';\n```\n\nIn this fix, `strncpy` is used instead of `strcpy`. The size of the destination buffer (`binaryFilename_resnet`) is passed to `strncpy` to prevent copying more characters than the buffer can hold. The last character is explicitly set to the null character (`'\\0'`) to ensure that the string is null-terminated, as `strncpy` does not null-terminate the destination string if the source string is longer than the specified length.\n\n## Library Dependencies\n\nThe code snippet requires the following library dependencies:\n\n- `<cstring>`: This library is required for the `strncpy` function.\n\n## References\n\n- [CWE-120: Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')](https://cwe.mitre.org/data/definitions/120.html)\n\nPlease note that the links are valid and active for anonymous users at the time of writing this report."
+              },
+              "properties": {
+                "tags": [
+                  "DS185832"
+                ]
+              }
+            },
+            {
+              "id": "glog-e99e07a9-6b3f-4119-888b-d9ad7ad9a5e4",
+              "help": {
+                "text": "",
+                "markdown": "## Description\n\nThe `strcpy` function in C++ is a standard library function that copies a string. However, it is considered unsafe because it does not check the size of the destination buffer, which can lead to buffer overflow if the source string is larger than the destination buffer. This can cause crashes, data corruption, and even allow attackers to execute arbitrary code.\n\nThis vulnerability is known as \"Detected Use of Prohibited C Function (strcpy)\".\n\n## Mitigation Advice\n\nTo mitigate this vulnerability, use safer string copy functions that check the size of the destination buffer. These include `strncpy`, `strlcpy`, or `memcpy`. However, these functions can also be misused, so it's important to always ensure that the destination buffer is large enough to hold the source string and the null terminator.\n\n## Source Code Fix Recommendation\n\nReplace the `strcpy` function with `strncpy`:\n\n```cpp\nstrncpy(binaryFilename_inception, binaryFilename_inception_str.c_str(), sizeof(binaryFilename_inception) - 1);\nbinaryFilename_inception[sizeof(binaryFilename_inception) - 1] = '\\0';\n```\n\nThis code will copy the string from `binaryFilename_inception_str.c_str()` to `binaryFilename_inception`, but it will not copy more than `sizeof(binaryFilename_inception) - 1` characters. The last line ensures that the string is null-terminated.\n\n## Library Dependencies\n\nThe code example requires the following library:\n\n```cpp\n#include <cstring>\n```\n\n## References\n\n- [OWASP C++ Secure Coding Practices](https://cheatsheetseries.owasp.org/cheatsheets/C-Based_Toolchain_Hardening_Cheat_Sheet.html)\n- [CWE-119: Improper Restriction of Operations within the Bounds of a Memory Buffer](https://cwe.mitre.org/data/definitions/119.html)"
+              },
+              "properties": {
+                "tags": [
+                  "DS185832"
                 ]
               }
             }
@@ -95,118 +203,118 @@
       "language": "en-US",
       "results": [
         {
-          "ruleId": "glog-2d95250e-eb95-4a7d-ae1c-367b5f8bd6bd",
+          "ruleId": "glog-9b54d136-e6f4-4a1e-81b1-c15a13de4b47",
           "kind": "fail",
           "level": "error",
           "message": {
-            "text": "\"Detected Use of Prohibited C Function (strcpy)\""
+            "text": "\"Detected Use of Prohibited C Function (strncpy)\""
           },
           "locations": [
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "amd_openvx_extensions/amd_loomsl/kernels/exposure_compensation.cpp"
+                  "uri": "apps/cloud_inference/client_app/inference_compiler.cpp"
                 },
                 "region": {
-                  "startLine": 671,
-                  "startColumn": 1,
-                  "endLine": 671,
+                  "startLine": 120,
+                  "startColumn": 20,
+                  "endLine": 120,
+                  "endColumn": 104,
+                  "charOffset": 4383,
+                  "charLength": 84,
+                  "snippet": {
+                    "text": "strncpy(reply.message, compilerOptions.toStdString().c_str(), sizeof(reply.message))",
+                    "rendered": {
+                      "text": "strncpy(reply.message, compilerOptions.toStdString().c_str(), sizeof(reply.message))",
+                      "markdown": "`strncpy(reply.message, compilerOptions.toStdString().c_str(), sizeof(reply.message))`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "strncpy is dangerous, as if the source contains 'n' or more characters, it will not null terminate the destination."
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/cloud_inference/client_app/inference_compiler.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 4383,
+                        "charLength": 84
+                      },
+                      "insertedContent": {
+                        "text": "strcpy_s(reply.message,  sizeof(reply.message,  compilerOptions.toStdString().c_str())"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "description": {
+                "text": "strncpy is dangerous, as if the source contains 'n' or more characters, it will not null terminate the destination."
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/cloud_inference/client_app/inference_compiler.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 4383,
+                        "charLength": 84
+                      },
+                      "insertedContent": {
+                        "text": "strlcpy(reply.message,  compilerOptions.toStdString().c_str(),  sizeof(reply.message)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Important",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-35a83e44-11b5-4750-b3a7-62559eec5123",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Detected Vulnerability in C Function (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                },
+                "region": {
+                  "startLine": 1216,
+                  "startColumn": 16,
+                  "endLine": 1216,
                   "endColumn": 65,
-                  "charOffset": 34297,
-                  "charLength": 64,
+                  "charOffset": 51748,
+                  "charLength": 49,
                   "snippet": {
-                    "text": "strcpy(opencl_kernel_function_name, \"exposure_comp_apply_gains\")",
+                    "text": "memcpy(outputBuffer[6], ptr, (count*sizeof(float)",
                     "rendered": {
-                      "text": "strcpy(opencl_kernel_function_name, \"exposure_comp_apply_gains\")",
-                      "markdown": "`strcpy(opencl_kernel_function_name, \"exposure_comp_apply_gains\")`"
-                    }
-                  },
-                  "sourceLanguage": "cpp"
-                }
-              }
-            }
-          ],
-          "fixes": [
-            {
-              "description": {
-                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
-              },
-              "artifactChanges": [
-                {
-                  "artifactLocation": {
-                    "uri": "amd_openvx_extensions/amd_loomsl/kernels/exposure_compensation.cpp"
-                  },
-                  "replacements": [
-                    {
-                      "deletedRegion": {
-                        "charOffset": 34297,
-                        "charLength": 64
-                      },
-                      "insertedContent": {
-                        "text": "strcpy_s(opencl_kernel_function_name, <size of opencl_kernel_function_name>,  \"exposure_comp_apply_gains\")"
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "description": {
-                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
-              },
-              "artifactChanges": [
-                {
-                  "artifactLocation": {
-                    "uri": "amd_openvx_extensions/amd_loomsl/kernels/exposure_compensation.cpp"
-                  },
-                  "replacements": [
-                    {
-                      "deletedRegion": {
-                        "charOffset": 34297,
-                        "charLength": 64
-                      },
-                      "insertedContent": {
-                        "text": "strlcpy(opencl_kernel_function_name,  \"exposure_comp_apply_gains\", <size of opencl_kernel_function_name>)"
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ],
-          "properties": {
-            "DevSkimSeverity": "Important",
-            "DevSkimConfidence": "High",
-            "tags": [
-              "API.DangerousAPI.BannedFunction"
-            ]
-          }
-        },
-        {
-          "ruleId": "glog-dd54d795-3094-483f-b43e-33968ec2b000",
-          "kind": "fail",
-          "level": "note",
-          "message": {
-            "text": "Detected Vulnerability in C Function (memcpy)"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "apps/cloud_inference/client_app/qcustomplot.cpp"
-                },
-                "region": {
-                  "startLine": 25110,
-                  "startColumn": 8,
-                  "endLine": 25110,
-                  "endColumn": 54,
-                  "charOffset": 933195,
-                  "charLength": 46,
-                  "snippet": {
-                    "text": "memcpy(mAlpha, other.mAlpha, sizeof(mAlpha[0])",
-                    "rendered": {
-                      "text": "memcpy(mAlpha, other.mAlpha, sizeof(mAlpha[0])",
-                      "markdown": "`memcpy(mAlpha, other.mAlpha, sizeof(mAlpha[0])`"
+                      "text": "memcpy(outputBuffer[6], ptr, (count*sizeof(float)",
+                      "markdown": "`memcpy(outputBuffer[6], ptr, (count*sizeof(float)`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -222,16 +330,16 @@
               "artifactChanges": [
                 {
                   "artifactLocation": {
-                    "uri": "apps/cloud_inference/client_app/qcustomplot.cpp"
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
                   },
                   "replacements": [
                     {
                       "deletedRegion": {
-                        "charOffset": 933195,
-                        "charLength": 46
+                        "charOffset": 51748,
+                        "charLength": 49
                       },
                       "insertedContent": {
-                        "text": "memcpy_s(mAlpha, <size of mAlpha>,  other.mAlpha,  sizeof(mAlpha[0])"
+                        "text": "memcpy_s(outputBuffer[6], <size of outputBuffer[6]>,  ptr,  (count*sizeof(float)"
                       }
                     }
                   ]
@@ -248,7 +356,485 @@
           }
         },
         {
-          "ruleId": "glog-b618a5ef-e0ec-4b0a-86c4-2f277809dfe8",
+          "ruleId": "glog-812526a2-60f9-4944-872d-434b0b3da0e5",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Detected Vulnerability in C Function (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                },
+                "region": {
+                  "startLine": 1193,
+                  "startColumn": 16,
+                  "endLine": 1193,
+                  "endColumn": 65,
+                  "charOffset": 50482,
+                  "charLength": 49,
+                  "snippet": {
+                    "text": "memcpy(outputBuffer[5], ptr, (count*sizeof(float)",
+                    "rendered": {
+                      "text": "memcpy(outputBuffer[5], ptr, (count*sizeof(float)",
+                      "markdown": "`memcpy(outputBuffer[5], ptr, (count*sizeof(float)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 50482,
+                        "charLength": 49
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(outputBuffer[5], <size of outputBuffer[5]>,  ptr,  (count*sizeof(float)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-943353eb-c548-46ff-b0d7-f9854362cd87",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Detected Vulnerability in C Function (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                },
+                "region": {
+                  "startLine": 1170,
+                  "startColumn": 16,
+                  "endLine": 1170,
+                  "endColumn": 65,
+                  "charOffset": 49189,
+                  "charLength": 49,
+                  "snippet": {
+                    "text": "memcpy(outputBuffer[4], ptr, (count*sizeof(float)",
+                    "rendered": {
+                      "text": "memcpy(outputBuffer[4], ptr, (count*sizeof(float)",
+                      "markdown": "`memcpy(outputBuffer[4], ptr, (count*sizeof(float)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 49189,
+                        "charLength": 49
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(outputBuffer[4], <size of outputBuffer[4]>,  ptr,  (count*sizeof(float)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-eccae1e7-4302-4d8d-81f8-8cf31c9c5291",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Detected Vulnerability in C Function (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                },
+                "region": {
+                  "startLine": 1124,
+                  "startColumn": 16,
+                  "endLine": 1124,
+                  "endColumn": 65,
+                  "charOffset": 46610,
+                  "charLength": 49,
+                  "snippet": {
+                    "text": "memcpy(outputBuffer[2], ptr, (count*sizeof(float)",
+                    "rendered": {
+                      "text": "memcpy(outputBuffer[2], ptr, (count*sizeof(float)",
+                      "markdown": "`memcpy(outputBuffer[2], ptr, (count*sizeof(float)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 46610,
+                        "charLength": 49
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(outputBuffer[2], <size of outputBuffer[2]>,  ptr,  (count*sizeof(float)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-c1b01c7f-958f-437a-a947-8a0ceff014c6",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Detected Vulnerability in C Function (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                },
+                "region": {
+                  "startLine": 1147,
+                  "startColumn": 16,
+                  "endLine": 1147,
+                  "endColumn": 65,
+                  "charOffset": 47896,
+                  "charLength": 49,
+                  "snippet": {
+                    "text": "memcpy(outputBuffer[3], ptr, (count*sizeof(float)",
+                    "rendered": {
+                      "text": "memcpy(outputBuffer[3], ptr, (count*sizeof(float)",
+                      "markdown": "`memcpy(outputBuffer[3], ptr, (count*sizeof(float)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 47896,
+                        "charLength": 49
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(outputBuffer[3], <size of outputBuffer[3]>,  ptr,  (count*sizeof(float)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-761cac78-f141-4a28-8dd8-6dd28a177470",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Detected Vulnerability in C Function (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                },
+                "region": {
+                  "startLine": 1101,
+                  "startColumn": 16,
+                  "endLine": 1101,
+                  "endColumn": 65,
+                  "charOffset": 45355,
+                  "charLength": 49,
+                  "snippet": {
+                    "text": "memcpy(outputBuffer[1], ptr, (count*sizeof(float)",
+                    "rendered": {
+                      "text": "memcpy(outputBuffer[1], ptr, (count*sizeof(float)",
+                      "markdown": "`memcpy(outputBuffer[1], ptr, (count*sizeof(float)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 45355,
+                        "charLength": 49
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(outputBuffer[1], <size of outputBuffer[1]>,  ptr,  (count*sizeof(float)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-d0931c9b-5b1e-4521-a739-c7aabddfcef4",
+          "kind": "fail",
+          "level": "note",
+          "message": {
+            "text": "Detected Vulnerability in C Function (memcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                },
+                "region": {
+                  "startLine": 1078,
+                  "startColumn": 16,
+                  "endLine": 1078,
+                  "endColumn": 65,
+                  "charOffset": 44079,
+                  "charLength": 49,
+                  "snippet": {
+                    "text": "memcpy(outputBuffer[0], ptr, (count*sizeof(float)",
+                    "rendered": {
+                      "text": "memcpy(outputBuffer[0], ptr, (count*sizeof(float)",
+                      "markdown": "`memcpy(outputBuffer[0], ptr, (count*sizeof(float)`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 44079,
+                        "charLength": 49
+                      },
+                      "insertedContent": {
+                        "text": "memcpy_s(outputBuffer[0], <size of outputBuffer[0]>,  ptr,  (count*sizeof(float)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "BestPractice",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.ProblematicFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-d5a4e576-79ac-4208-8914-47e09090e21f",
+          "kind": "fail",
+          "level": "error",
+          "message": {
+            "text": "Detected Use of Prohibited C Function (strcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                },
+                "region": {
+                  "startLine": 583,
+                  "startColumn": 4,
+                  "endLine": 583,
+                  "endColumn": 73,
+                  "charOffset": 23035,
+                  "charLength": 69,
+                  "snippet": {
+                    "text": "strcpy(binaryFilename_resnet152, binaryFilename_resnet152_str.c_str()",
+                    "rendered": {
+                      "text": "strcpy(binaryFilename_resnet152, binaryFilename_resnet152_str.c_str()",
+                      "markdown": "`strcpy(binaryFilename_resnet152, binaryFilename_resnet152_str.c_str()`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 23035,
+                        "charLength": 69
+                      },
+                      "insertedContent": {
+                        "text": "strcpy_s(binaryFilename_resnet152, <size of binaryFilename_resnet152>,  binaryFilename_resnet152_str.c_str()"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "description": {
+                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 23035,
+                        "charLength": 69
+                      },
+                      "insertedContent": {
+                        "text": "strlcpy(binaryFilename_resnet152,  binaryFilename_resnet152_str.c_str(, <size of binaryFilename_resnet152>)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Important",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-fb5c152e-afe3-4249-a091-78cb31224f37",
           "kind": "fail",
           "level": "error",
           "message": {
@@ -258,20 +844,20 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "amd_openvx_extensions/amd_loomsl/kernels/exposure_compensation.cpp"
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
                 },
                 "region": {
-                  "startLine": 210,
-                  "startColumn": 1,
-                  "endLine": 210,
-                  "endColumn": 71,
-                  "charOffset": 10490,
-                  "charLength": 70,
+                  "startLine": 580,
+                  "startColumn": 4,
+                  "endLine": 580,
+                  "endColumn": 61,
+                  "charOffset": 22819,
+                  "charLength": 57,
                   "snippet": {
-                    "text": "strcpy(opencl_kernel_function_name, \"exposure_comp_calc_errorfn_mask\")",
+                    "text": "strcpy(binaryFilename_vgg, binaryFilename_vgg_str.c_str()",
                     "rendered": {
-                      "text": "strcpy(opencl_kernel_function_name, \"exposure_comp_calc_errorfn_mask\")",
-                      "markdown": "`strcpy(opencl_kernel_function_name, \"exposure_comp_calc_errorfn_mask\")`"
+                      "text": "strcpy(binaryFilename_vgg, binaryFilename_vgg_str.c_str()",
+                      "markdown": "`strcpy(binaryFilename_vgg, binaryFilename_vgg_str.c_str()`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -287,16 +873,16 @@
               "artifactChanges": [
                 {
                   "artifactLocation": {
-                    "uri": "amd_openvx_extensions/amd_loomsl/kernels/exposure_compensation.cpp"
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
                   },
                   "replacements": [
                     {
                       "deletedRegion": {
-                        "charOffset": 10490,
-                        "charLength": 70
+                        "charOffset": 22819,
+                        "charLength": 57
                       },
                       "insertedContent": {
-                        "text": "strcpy_s(opencl_kernel_function_name, <size of opencl_kernel_function_name>,  \"exposure_comp_calc_errorfn_mask\")"
+                        "text": "strcpy_s(binaryFilename_vgg, <size of binaryFilename_vgg>,  binaryFilename_vgg_str.c_str()"
                       }
                     }
                   ]
@@ -310,16 +896,16 @@
               "artifactChanges": [
                 {
                   "artifactLocation": {
-                    "uri": "amd_openvx_extensions/amd_loomsl/kernels/exposure_compensation.cpp"
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
                   },
                   "replacements": [
                     {
                       "deletedRegion": {
-                        "charOffset": 10490,
-                        "charLength": 70
+                        "charOffset": 22819,
+                        "charLength": 57
                       },
                       "insertedContent": {
-                        "text": "strlcpy(opencl_kernel_function_name,  \"exposure_comp_calc_errorfn_mask\", <size of opencl_kernel_function_name>)"
+                        "text": "strlcpy(binaryFilename_vgg,  binaryFilename_vgg_str.c_str(, <size of binaryFilename_vgg>)"
                       }
                     }
                   ]
@@ -336,7 +922,7 @@
           }
         },
         {
-          "ruleId": "glog-cef51256-767a-4c50-88de-9f99f18b1453",
+          "ruleId": "glog-362d0131-2fc8-4aa8-8e71-2119826a499b",
           "kind": "fail",
           "level": "error",
           "message": {
@@ -346,20 +932,20 @@
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "amd_openvx_extensions/amd_loomsl/kernels/exposure_compensation.cpp"
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
                 },
                 "region": {
-                  "startLine": 1344,
-                  "startColumn": 1,
-                  "endLine": 1344,
-                  "endColumn": 74,
-                  "charOffset": 68430,
-                  "charLength": 73,
+                  "startLine": 584,
+                  "startColumn": 4,
+                  "endLine": 584,
+                  "endColumn": 65,
+                  "charOffset": 23111,
+                  "charLength": 61,
                   "snippet": {
-                    "text": "strcpy(opencl_kernel_function_name, \"exposure_comp_calc_errorRGBfn_mask\")",
+                    "text": "strcpy(binaryFilename_vgg19, binaryFilename_vgg19_str.c_str()",
                     "rendered": {
-                      "text": "strcpy(opencl_kernel_function_name, \"exposure_comp_calc_errorRGBfn_mask\")",
-                      "markdown": "`strcpy(opencl_kernel_function_name, \"exposure_comp_calc_errorRGBfn_mask\")`"
+                      "text": "strcpy(binaryFilename_vgg19, binaryFilename_vgg19_str.c_str()",
+                      "markdown": "`strcpy(binaryFilename_vgg19, binaryFilename_vgg19_str.c_str()`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -375,16 +961,16 @@
               "artifactChanges": [
                 {
                   "artifactLocation": {
-                    "uri": "amd_openvx_extensions/amd_loomsl/kernels/exposure_compensation.cpp"
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
                   },
                   "replacements": [
                     {
                       "deletedRegion": {
-                        "charOffset": 68430,
-                        "charLength": 73
+                        "charOffset": 23111,
+                        "charLength": 61
                       },
                       "insertedContent": {
-                        "text": "strcpy_s(opencl_kernel_function_name, <size of opencl_kernel_function_name>,  \"exposure_comp_calc_errorRGBfn_mask\")"
+                        "text": "strcpy_s(binaryFilename_vgg19, <size of binaryFilename_vgg19>,  binaryFilename_vgg19_str.c_str()"
                       }
                     }
                   ]
@@ -398,16 +984,16 @@
               "artifactChanges": [
                 {
                   "artifactLocation": {
-                    "uri": "amd_openvx_extensions/amd_loomsl/kernels/exposure_compensation.cpp"
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
                   },
                   "replacements": [
                     {
                       "deletedRegion": {
-                        "charOffset": 68430,
-                        "charLength": 73
+                        "charOffset": 23111,
+                        "charLength": 61
                       },
                       "insertedContent": {
-                        "text": "strlcpy(opencl_kernel_function_name,  \"exposure_comp_calc_errorRGBfn_mask\", <size of opencl_kernel_function_name>)"
+                        "text": "strlcpy(binaryFilename_vgg19,  binaryFilename_vgg19_str.c_str(, <size of binaryFilename_vgg19>)"
                       }
                     }
                   ]
@@ -424,30 +1010,30 @@
           }
         },
         {
-          "ruleId": "glog-135dddd8-3586-4bbe-98a4-7a3a7eab9d18",
+          "ruleId": "glog-880ca9fb-401b-4ff0-9705-cb4bf3e3dc0f",
           "kind": "fail",
-          "level": "note",
+          "level": "error",
           "message": {
-            "text": "Detected Vulnerability in C Function (memcpy)"
+            "text": "\"Detected Use of Prohibited C Function (strcpy)\""
           },
           "locations": [
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "apps/cloud_inference/client_app/qcustomplot.cpp"
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
                 },
                 "region": {
-                  "startLine": 25108,
-                  "startColumn": 6,
-                  "endLine": 25108,
-                  "endColumn": 49,
-                  "charOffset": 933105,
-                  "charLength": 43,
+                  "startLine": 582,
+                  "startColumn": 4,
+                  "endLine": 582,
+                  "endColumn": 73,
+                  "charOffset": 22959,
+                  "charLength": 69,
                   "snippet": {
-                    "text": "memcpy(mData, other.mData, sizeof(mData[0])",
+                    "text": "strcpy(binaryFilename_resnet101, binaryFilename_resnet101_str.c_str()",
                     "rendered": {
-                      "text": "memcpy(mData, other.mData, sizeof(mData[0])",
-                      "markdown": "`memcpy(mData, other.mData, sizeof(mData[0])`"
+                      "text": "strcpy(binaryFilename_resnet101, binaryFilename_resnet101_str.c_str()",
+                      "markdown": "`strcpy(binaryFilename_resnet101, binaryFilename_resnet101_str.c_str()`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -458,21 +1044,44 @@
           "fixes": [
             {
               "description": {
-                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
               },
               "artifactChanges": [
                 {
                   "artifactLocation": {
-                    "uri": "apps/cloud_inference/client_app/qcustomplot.cpp"
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
                   },
                   "replacements": [
                     {
                       "deletedRegion": {
-                        "charOffset": 933105,
-                        "charLength": 43
+                        "charOffset": 22959,
+                        "charLength": 69
                       },
                       "insertedContent": {
-                        "text": "memcpy_s(mData, <size of mData>,  other.mData,  sizeof(mData[0])"
+                        "text": "strcpy_s(binaryFilename_resnet101, <size of binaryFilename_resnet101>,  binaryFilename_resnet101_str.c_str()"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "description": {
+                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 22959,
+                        "charLength": 69
+                      },
+                      "insertedContent": {
+                        "text": "strlcpy(binaryFilename_resnet101,  binaryFilename_resnet101_str.c_str(, <size of binaryFilename_resnet101>)"
                       }
                     }
                   ]
@@ -481,38 +1090,38 @@
             }
           ],
           "properties": {
-            "DevSkimSeverity": "BestPractice",
+            "DevSkimSeverity": "Important",
             "DevSkimConfidence": "High",
             "tags": [
-              "API.DangerousAPI.ProblematicFunction"
+              "API.DangerousAPI.BannedFunction"
             ]
           }
         },
         {
-          "ruleId": "glog-a65ddabe-8f00-49bd-a1b0-412f733ac57b",
+          "ruleId": "glog-d700b798-ef0a-4d70-9809-5fb52bcadf2c",
           "kind": "fail",
-          "level": "note",
+          "level": "error",
           "message": {
-            "text": "Detected Vulnerability in C Function (memcpy)"
+            "text": "\"Detected Use of Prohibited C Function (strcpy)\""
           },
           "locations": [
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "amd_openvx/openvx/ago/ago_kernel_api.cpp"
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
                 },
                 "region": {
-                  "startLine": 2115,
-                  "startColumn": 8,
-                  "endLine": 2115,
-                  "endColumn": 74,
-                  "charOffset": 92838,
-                  "charLength": 66,
+                  "startLine": 581,
+                  "startColumn": 4,
+                  "endLine": 581,
+                  "endColumn": 73,
+                  "charOffset": 22883,
+                  "charLength": 69,
                   "snippet": {
-                    "text": "memcpy(&meta->data.u, &node->paramList[0]->u, sizeof(meta->data.u)",
+                    "text": "strcpy(binaryFilename_googlenet, binaryFilename_googlenet_str.c_str()",
                     "rendered": {
-                      "text": "memcpy(&meta->data.u, &node->paramList[0]->u, sizeof(meta->data.u)",
-                      "markdown": "`memcpy(&meta->data.u, &node->paramList[0]->u, sizeof(meta->data.u)`"
+                      "text": "strcpy(binaryFilename_googlenet, binaryFilename_googlenet_str.c_str()",
+                      "markdown": "`strcpy(binaryFilename_googlenet, binaryFilename_googlenet_str.c_str()`"
                     }
                   },
                   "sourceLanguage": "cpp"
@@ -523,21 +1132,44 @@
           "fixes": [
             {
               "description": {
-                "text": "There are a number of conditions in which memcpy can introduce a vulnerability (mismatched buffer sizes, null pointers, etc.). More secure alternitives perform additional validation of the source and destination buffer"
+                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
               },
               "artifactChanges": [
                 {
                   "artifactLocation": {
-                    "uri": "amd_openvx/openvx/ago/ago_kernel_api.cpp"
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
                   },
                   "replacements": [
                     {
                       "deletedRegion": {
-                        "charOffset": 92838,
-                        "charLength": 66
+                        "charOffset": 22883,
+                        "charLength": 69
                       },
                       "insertedContent": {
-                        "text": "memcpy_s(&meta->data.u, <size of &meta->data.u>,  &node->paramList[0]->u,  sizeof(meta->data.u)"
+                        "text": "strcpy_s(binaryFilename_googlenet, <size of binaryFilename_googlenet>,  binaryFilename_googlenet_str.c_str()"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "description": {
+                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 22883,
+                        "charLength": 69
+                      },
+                      "insertedContent": {
+                        "text": "strlcpy(binaryFilename_googlenet,  binaryFilename_googlenet_str.c_str(, <size of binaryFilename_googlenet>)"
                       }
                     }
                   ]
@@ -546,10 +1178,186 @@
             }
           ],
           "properties": {
-            "DevSkimSeverity": "BestPractice",
+            "DevSkimSeverity": "Important",
             "DevSkimConfidence": "High",
             "tags": [
-              "API.DangerousAPI.ProblematicFunction"
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-495785a4-dda3-4464-9619-44de60715514",
+          "kind": "fail",
+          "level": "error",
+          "message": {
+            "text": "\"Detected Use of Prohibited C Function (strcpy)\""
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                },
+                "region": {
+                  "startLine": 579,
+                  "startColumn": 4,
+                  "endLine": 579,
+                  "endColumn": 67,
+                  "charOffset": 22749,
+                  "charLength": 63,
+                  "snippet": {
+                    "text": "strcpy(binaryFilename_resnet, binaryFilename_resnet_str.c_str()",
+                    "rendered": {
+                      "text": "strcpy(binaryFilename_resnet, binaryFilename_resnet_str.c_str()",
+                      "markdown": "`strcpy(binaryFilename_resnet, binaryFilename_resnet_str.c_str()`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 22749,
+                        "charLength": 63
+                      },
+                      "insertedContent": {
+                        "text": "strcpy_s(binaryFilename_resnet, <size of binaryFilename_resnet>,  binaryFilename_resnet_str.c_str()"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "description": {
+                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 22749,
+                        "charLength": 63
+                      },
+                      "insertedContent": {
+                        "text": "strlcpy(binaryFilename_resnet,  binaryFilename_resnet_str.c_str(, <size of binaryFilename_resnet>)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Important",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
+            ]
+          }
+        },
+        {
+          "ruleId": "glog-e99e07a9-6b3f-4119-888b-d9ad7ad9a5e4",
+          "kind": "fail",
+          "level": "error",
+          "message": {
+            "text": "Detected Use of Prohibited C Function (strcpy)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                },
+                "region": {
+                  "startLine": 578,
+                  "startColumn": 4,
+                  "endLine": 578,
+                  "endColumn": 73,
+                  "charOffset": 22673,
+                  "charLength": 69,
+                  "snippet": {
+                    "text": "strcpy(binaryFilename_inception, binaryFilename_inception_str.c_str()",
+                    "rendered": {
+                      "text": "strcpy(binaryFilename_inception, binaryFilename_inception_str.c_str()",
+                      "markdown": "`strcpy(binaryFilename_inception, binaryFilename_inception_str.c_str()`"
+                    }
+                  },
+                  "sourceLanguage": "cpp"
+                }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": {
+                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 22673,
+                        "charLength": 69
+                      },
+                      "insertedContent": {
+                        "text": "strcpy_s(binaryFilename_inception, <size of binaryFilename_inception>,  binaryFilename_inception_str.c_str()"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "description": {
+                "text": "strcpy is frequently dangerous, as it will cause a buffer overflow if the source is larger than the destination."
+              },
+              "artifactChanges": [
+                {
+                  "artifactLocation": {
+                    "uri": "apps/mivisionx_openvx_classifier/source/classifier.cpp"
+                  },
+                  "replacements": [
+                    {
+                      "deletedRegion": {
+                        "charOffset": 22673,
+                        "charLength": 69
+                      },
+                      "insertedContent": {
+                        "text": "strlcpy(binaryFilename_inception,  binaryFilename_inception_str.c_str(, <size of binaryFilename_inception>)"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "DevSkimSeverity": "Important",
+            "DevSkimConfidence": "High",
+            "tags": [
+              "API.DangerousAPI.BannedFunction"
             ]
           }
         }
